@@ -1,0 +1,93 @@
+
+Goals:
+
+    Analyze glucose levels before and after GTT ingestion.
+    Identify if the glucose levels are above the diabetic threshold.
+    Evaluate if the patient shows signs of insulin resistance.
+
+Data Structure:
+
+We'll assume the data is in a CSV file with the following columns:
+
+    timestamp: The date and time of the glucose measurement.
+    glucose_level: The measured glucose level.
+
+Analysis Steps:
+
+    Load the data.
+    Filter data for before and after GTT ingestion.
+    Descriptive statistics for glucose levels.
+    Plot glucose levels over time to visualize the response to the GTT.
+    Determine if glucose levels exceed diabetic thresholds at specified times.
+    Evaluate insulin resistance by analyzing the glucose level decrease over time.
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the data
+file_path = 'glucose_data.csv'  # Replace with your file path
+data = pd.read_csv(file_path)
+
+# Convert timestamp to datetime
+data['timestamp'] = pd.to_datetime(data['timestamp'])
+
+# Descriptive statistics
+descriptive_stats = data['glucose_level'].describe()
+print("Descriptive Statistics:")
+print(descriptive_stats)
+
+# Identify GTT timepoints
+# Assuming GTT starts at a specific time and we know the ingestion time, e.g., '2023-01-01 08:00:00'
+gtt_start_time = pd.to_datetime('2023-01-01 08:00:00')
+gtt_end_time = gtt_start_time + pd.Timedelta(hours=2)
+
+# Filter data before and after GTT
+before_gtt = data[data['timestamp'] < gtt_start_time]
+after_gtt = data[(data['timestamp'] >= gtt_start_time) & (data['timestamp'] <= gtt_end_time)]
+
+# Plotting glucose levels before and after GTT
+plt.figure(figsize=(12, 6))
+plt.plot(data['timestamp'], data['glucose_level'], marker='o', linestyle='-', label='Glucose Level')
+plt.axvline(gtt_start_time, color='r', linestyle='--', label='GTT Start')
+plt.axvline(gtt_end_time, color='g', linestyle='--', label='GTT End')
+plt.title('Glucose Levels Before and After GTT')
+plt.xlabel('Time')
+plt.ylabel('Glucose Level')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Check if glucose levels exceed diabetic thresholds
+# According to ADA, a 2-hour glucose level > 200 mg/dL indicates diabetes
+diabetic_threshold = 200
+diabetic_points = after_gtt[after_gtt['glucose_level'] > diabetic_threshold]
+
+print("Diabetic Points After GTT:")
+print(diabetic_points)
+
+# Evaluate insulin resistance by analyzing the decrease in glucose level
+initial_glucose_level = after_gtt.iloc[0]['glucose_level']
+final_glucose_level = after_gtt.iloc[-1]['glucose_level']
+glucose_decrease = initial_glucose_level - final_glucose_level
+print(f"Initial Glucose Level: {initial_glucose_level} mg/dL")
+print(f"Final Glucose Level: {final_glucose_level} mg/dL")
+print(f"Glucose Decrease: {glucose_decrease} mg/dL")
+
+# Save results
+diabetic_points.to_csv('diabetic_points_after_gtt.csv', index=False)
+
+
+Explanation:
+
+    Load the data: Reads the CSV file into a Pandas DataFrame.
+    Convert timestamp: Ensures the timestamp column is in datetime format.
+    Descriptive statistics: Provides basic statistics for glucose levels.
+    Identify GTT timepoints: Specifies the start and end time of the GTT.
+    Filter data: Separates the data into before and after the GTT ingestion periods.
+    Plot glucose levels: Visualizes glucose levels over time with markers for GTT start and end times.
+    Diabetic threshold check: Identifies points where glucose levels exceed 200 mg/dL after GTT.
+    Evaluate insulin resistance: Compares initial and final glucose levels after GTT to assess the body's response.
+    Save results: Exports any points exceeding the diabetic threshold to a CSV file.
